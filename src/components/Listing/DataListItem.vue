@@ -9,7 +9,7 @@
                     <b-row>
                       <b-col>
                         <h3 style="color: orangered">URL Curta</h3>
-                        <p class="list-item-heading mb-1 w-sm-100">{{data.shortUrl}}</p>
+                        <p class="list-item-heading mb-1 w-sm-100"><a target="blank" :href="data.shortUrl">{{data.shortUrl}}</a></p>
                       </b-col>
                       <b-col>
                         <h3>URL Longa</h3>
@@ -21,7 +21,7 @@
                       </b-col>
                       <b-col style="color: grey; text-align: center;">
                         <h5>Status:</h5>
-                        <b-badge @click="changeStatusItem" pill :variant="statusColor">{{ statusName }}</b-badge>
+                        <b-badge @click="changeStatusItem" style="cursor: pointer" pill :variant="statusColor">{{ statusName }}</b-badge>
                       </b-col>
                     </b-row>
                   </b-col>

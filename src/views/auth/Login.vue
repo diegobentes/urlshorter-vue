@@ -30,9 +30,26 @@ export default {
   },
   methods: {
     loginSubmit () {
-        localStorage.setItem('user', JSON.stringify(this.email))
-        this.$router.push('/urls')
+        this.axios.post('/auth/login', {
+            email: this.email,
+            password: this.password
+        })
+        .then((res) => {
+            localStorage.setItem('current_user', res.data.username)
+            localStorage.setItem('token', res.data.token)
+            this.$router.push('/urls')
+        })
+        .catch((err) => {
+            alert('usuario e senha nao encontrados');
+        })
     }
+  },
+  created() {
+      if (  localStorage.getItem('current_user') != 'undefined' 
+        && localStorage.getItem('current_user') != null 
+        && localStorage.getItem('current_user').length > 0  ) {
+            this.$router.push('/urls')
+        }
   }
 }
 </script>

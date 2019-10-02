@@ -1,8 +1,9 @@
 <template>
     <div>
         <b-row>
-            <b-colxx class="disable-text-selection">
-                
+            <b-colxx class="">
+                <!-- class para desabilitar selecao: disable-text-selection -->
+
                 <b-row>
                     <b-colxx xxs="12">
                         <h1>Meus ShortLinks</h1>
@@ -22,7 +23,7 @@
                                 dialog-class="modal-dialog"
                                 id="modalright"
                                 ref="modalright"
-                                title="Criar ShortLink"
+                                title="ShortLink"
                             >
                                 <b-form>
                                     <b-form-group label="Qual a URL que você quer encurtar?" />
@@ -80,39 +81,36 @@ export default {
             eventForm: 'save',
             selectedItem: null,
 
-            items: [
-                {
-                    id: 1,
-                    longUrl: 'http://www.google.com.br',
-                    shortUrl: 'http://localhost:3000/abcd',
-                    createdAt: '30/09/2019 22:29',
-                    status: true
-                },
-                {
-                    id: 2,
-                    longUrl: 'http://www.google.com.br',
-                    shortUrl: 'http://localhost:3000/abcd',
-                    createdAt: '30/09/2019 22:29',
-                    status: false
-                },
-            ],
+            items: [],
         }
     },
     methods: {
         saveItem() {
-            this.items.push({
-                id: Math.random,
-                longUrl: this.longUrl,
-                shortUrl: 'http://localhost:3000/r4ett',
-                createdAt: '01/10/2019 03:52',
-                status: true
+            let self = this
+
+            self.axios.post('/urls', {
+                long_url: self.longUrl
             })
-            this.resetAttributes()
-            this.$refs['modalright'].hide()
+                .then(res => {
+                    this.items.push({
+                        id: res.data.id,
+                        longUrl: res.data.long_url,
+                        shortUrl: res.data.short_url,
+                        createdAt: res.data.created_at,
+                        status: res.data.status,
+                    })
+                    this.resetAttributes()
+                    this.$refs['modalright'].hide()
+                })
+
         },
         deleteItem(item) {
             if(confirm('Você tem certeza que deseja apagar este item?')){
-                this.items.splice(this.items.indexOf(item), 1);
+                let self = this
+                self.axios.delete(`/urls/${item.id}`)
+                    .then(() => {
+                        self.items.splice(self.items.indexOf(item), 1);
+                    })
             }
         },
         editItem(item) {
@@ -122,12 +120,26 @@ export default {
             this.$refs['modalright'].show()
         },
         updateItem() {
-            this.setListAttributes(this.items.indexOf(this.selectedItem))
-            this.resetAttributes()
-            this.$refs['modalright'].hide()
+            let self = this
+
+            self.axios.put(`/urls/${self.selectedItem.id}`, {
+                long_url: self.longUrl
+            })
+                .then(() => {
+                    this.updateListAttributes(this.items.indexOf(this.selectedItem))
+                    this.resetAttributes()
+                    this.$refs['modalright'].hide()
+                })
+
         },
         changeStatusItem(item) {
-            this.items[this.items.indexOf(item)].status = !this.items[this.items.indexOf(item)].status
+            let self = this
+            self.axios.put(`/urls/${this.items[this.items.indexOf(item)].id}`, {
+                status: !self.items[self.items.indexOf(item)].status
+            })
+                .then(() => {
+                    this.items[this.items.indexOf(item)].status = !this.items[this.items.indexOf(item)].status
+                })
         },
         resetAttributes() {
             this.id = null
@@ -145,7 +157,7 @@ export default {
             this.createdAt = item.createdAt
             this.status = item.status
         },
-        setListAttributes(index) {
+        updateListAttributes(index) {
             this.items[index].id = this.id
             this.items[index].longUrl = this.longUrl
             this.items[index].shortUrl = this.shortUrl
@@ -158,6 +170,21 @@ export default {
             let fx = this.eventForm == 'save' ? () => this.saveItem : () => this.updateItem
             return fx()
         }
+    },
+    created() {
+        let self = this
+        self.axios.get('/urls')
+            .then(res => {
+                for(var index in res.data){
+                    self.items.push({
+                        id: res.data[index].id,
+                        longUrl: res.data[index].long_url,
+                        shortUrl: res.data[index].short_url,
+                        createdAt: res.data[index].created_at,
+                        status: res.data[index].status
+                    })
+                }
+            })
     }
 }
 </script>

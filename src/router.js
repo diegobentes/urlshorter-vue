@@ -7,6 +7,8 @@ import Usuario from '@/views/user/Usuario'
 import Dashboard from '@/views/Index'
 import Login from '@/views/auth/Login'
 
+import Redirect from '@/views/redirect/Redirect'
+
 import AuthRequired from '@/utils/AuthRequired'
 
 Vue.use(Router)
@@ -20,6 +22,10 @@ export default new Router({
       beforeEnter: AuthRequired,
       children: [
         {
+          path: '',
+          component: Url
+        },
+        {
           path: '/urls',
           component: Url
         },
@@ -32,6 +38,10 @@ export default new Router({
     {
       path: '/auth/login',
       component: Login
+    },
+    {
+      path: '/:shortUrl',
+      component: Redirect
     }
   ]
 })

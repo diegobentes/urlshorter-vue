@@ -23,7 +23,7 @@
         >
           <template slot="button-content">
             <span class="iconify" data-icon="simple-line-icons:user" data-inline="false"></span>
-            <span class="ml-2">Usuário</span>
+            <span class="ml-2">{{ usuario }}</span>
           </template>
           <b-dropdown-item @click="logOut">Sair</b-dropdown-item>
         </b-dropdown>
@@ -37,14 +37,23 @@
   import { VueLogo } from '@/components/Svg'
 
   export default {
+    data(){
+      return {
+        usuario: ''
+      }
+    },
     components: {
       VueLogo
     },
     methods: {
       logOut() {
-        localStorage.removeItem('user')
+        localStorage.removeItem('current_user')
+        localStorage.removeItem('token')
         this.$router.push('/auth/login')
       }
+    },
+    created() {
+      this.usuario = localStorage.getItem('current_user')
     }
   }
 </script>

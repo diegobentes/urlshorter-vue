@@ -22,7 +22,7 @@
                                 dialog-class="modal-dialog"
                                 id="modalright"
                                 ref="modalright"
-                                title="Novo Usuário"
+                                title="Usuário"
                             >
                                 <b-form>
                                     <b-form-group>
@@ -45,6 +45,7 @@
                                             id="email"
                                             v-model="form.email"
                                             type="email"
+                                            :disabled="eventForm == 'edit'"
                                             required
                                         ></b-form-input>
                                     </b-form-group>
@@ -58,6 +59,7 @@
                                             v-model="form.usuario"
                                             type="text"
                                             required
+                                            :disabled="eventForm == 'edit'"
                                         ></b-form-input>
                                     </b-form-group>
 
@@ -88,8 +90,9 @@
 
                                 <template slot="modal-footer">
                                     <b-button
+                                    type="submit"
                                     variant="primary"
-                                    @click="formFunction"
+                                    @click.prevent="formFunction"
                                     class="mr-1"
                                     >Salvar</b-button>
                                 </template>
@@ -106,7 +109,7 @@
                     <b-colxx cols="8">
                         <b-card class="mb-4">
                             
-                            <b-table hover title="Usuarios"  :fields="fields" :items="items">
+                            <b-table :busy="formBusy" hover title="Usuarios"  :fields="fields" :items="items">
                                 <!-- busy="true" -->
                                 <template v-slot:cell(operacoes)="data">
                                     <b-button variant="outline-warning" size="sm" @click="editItem(data)">Editar</b-button>
@@ -138,6 +141,7 @@ export default {
         return {
             eventForm: 'save',
             selectedItem: null,
+            formBusy: false,
 
             fields: [
                 { key: 'nome', label: 'Nome' },
@@ -145,11 +149,7 @@ export default {
                 { key: 'email', label: 'Email' },
                 { key: 'operacoes', label: 'Operações' }
             ],
-            items: [
-                { email: 'a@a.com', nome: 'Mark', usuario: 'Otto' },
-                { email: 'a@a.com', nome: 'Jacob', usuario: 'Thornton' },
-                { email: 'a@a.com', nome: 'Lary', usuario: 'the Bird' }
-            ],
+            items: [],
             form: {
                 id: null,
                 nome: '',
@@ -162,17 +162,39 @@ export default {
     },
     methods: {
         saveItem() {
-            this.items.push({
-                email: this.form.email,
-                nome: this.form.nome,
-                usuario: this.form.usuario
+            let self = this
+
+            self.axios.post('/users', {
+                name: self.form.nome,
+                username: self.form.usuario,
+                email: self.form.email,
+                password: self.form.senha,
+                password_confirmation: self.form.repeatsenha
             })
-            this.resetAttributes()
-            this.$refs['modalright'].hide()
+                .then(res => {
+                    this.items.push({
+                        id: res.data.id,
+                        email: res.data.email,
+                        nome: res.data.name,
+                        usuario: res.data.username
+                    })
+                    this.resetAttributes()
+                    this.$refs['modalright'].hide()
+                })
         },
-        deleteItem(item) {
+        deleteItem(data) {
             if(confirm('Você tem certeza que deseja apagar este item?')){
-                this.items.splice(item.index, 1);
+                let self = this
+                self.toogleFormBusy()
+                if( localStorage.getItem('current_user') == data.item.usuario) {
+                    alert('Não é possível apagar o usuário ativo')
+                }else{
+                    self.axios.delete(`/users/${data.item.usuario}`)
+                        .then(() => {
+                            self.items.splice(data.index, 1);
+                            self.toogleFormBusy()
+                        })
+                }
             }
         },
         editItem(data) {
@@ -182,9 +204,18 @@ export default {
             this.$refs['modalright'].show()
         },
         updateItem() {
-            this.updateListAttributes(this.selectedItem.index)
-            this.resetAttributes()
-            this.$refs['modalright'].hide()
+            let self = this
+
+            self.axios.put(`/users/${self.selectedItem.item.usuario}`, {
+                name: this.form.nome,
+                password: this.form.senha,
+                password_confirmation: this.form.repeatsenha
+            })
+                .then(() => {
+                    this.updateListAttributes(this.selectedItem.index)
+                    this.resetAttributes()
+                    this.$refs['modalright'].hide()
+                })
         },
         setFormAttributes(data) {
             this.form.id = data.item.id
@@ -207,12 +238,31 @@ export default {
             this.form.email = ''
             this.form.usuario = ''
         },
+        toogleFormBusy(){
+            this.formBusy = !this.formBusy
+        }
     },
     computed: {
         formFunction(){
             let fx = this.eventForm == 'save' ? () => this.saveItem : () => this.updateItem
             return fx()
         }
+    },
+    created() {
+        this.toogleFormBusy()
+        let self = this
+        self.axios.get('/users')
+            .then(res => {
+                for(var index in res.data){
+                    self.items.push({
+                        id: res.data[index].id,
+                        email: res.data[index].email,
+                        nome: res.data[index].name,
+                        usuario: res.data[index].username
+                    })
+                }
+                self.toogleFormBusy()
+            })
     }
 }
 </script>
