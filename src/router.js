@@ -1,25 +1,37 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Home from './views/Home.vue'
+
+import Url from '@/views/Url'
+import Usuario from '@/views/user/Usuario'
+
+import Dashboard from '@/views/Index'
+import Login from '@/views/auth/Login'
+
+import AuthRequired from '@/utils/AuthRequired'
 
 Vue.use(Router)
 
 export default new Router({
   mode: 'history',
-  base: process.env.BASE_URL,
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: Home
-    },
+      component: Dashboard,
+      beforeEnter: AuthRequired,
+      children: [
+        {
+          path: '/urls',
+          component: Url
+        },
+        {
+          path: '/usuarios',
+          component: Usuario
+        },
+      ]
+    },    
     {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (about.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import(/* webpackChunkName: "about" */ './views/About.vue')
+      path: '/auth/login',
+      component: Login
     }
   ]
 })
